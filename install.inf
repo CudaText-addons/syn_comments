@@ -1,0 +1,45 @@
+[info]
+title=Comments
+desc=Gives commands to comment/uncomment lines/blocks in source code
+type=py-plugin
+subdir=syn_comments
+
+[ini11]
+section=Commands
+id=Comments\Toggle line comment, at line start
+params=cmt_toggle_line_1st
+
+[ini12]
+section=Commands
+id=Comments\Toggle line comment, at non-space char
+params=cmt_toggle_line_body
+
+[ini21]
+section=Commands
+id=Comments\Add line comment, at line start
+params=cmt_add_line_1st
+
+[ini22]
+section=Commands
+id=Comments\Add line comment, at non-space char
+params=cmt_add_line_body
+
+[ini23]
+section=Commands
+id=Comments\Remove line comment
+params=cmt_del_line
+
+[ini30]
+section=Commands
+id=Comments\-
+params=_
+
+[ini31]
+section=Commands
+id=Comments\Toggle stream comment
+params=cmt_toggle_stream
+
+[ini100]
+section=Commands
+id=Comments\Config
+params=dlg_config
