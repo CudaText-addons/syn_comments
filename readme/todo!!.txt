@@ -1,4 +1,0 @@
-
-works now: line-cmts
-dont work, todo!!: stream cmts
-todo-- Synw API to get comments

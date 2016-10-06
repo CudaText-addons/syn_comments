@@ -1,13 +1,12 @@
 ﻿''' Plugin for SynWrite
 Authors:
     Andrey Kvichansky (kvichans on github.com)
-    Alexey (SynWrite)
+    Alexey T. (SynWrite)
 '''
 
 import  os
 import  sw            as app
 from    sw        import ed
-import  sw_cmd        as cmds
 
 fn_config = os.path.join(app.app_ini_dir(), 'syn_comments.ini')
 op_keep_column = False
@@ -47,7 +46,8 @@ class Command:
     def cmt_del_line(self):
         return self._cmt_toggle_line('del')
 
-    def _cmt_toggle_line(self, cmt_act, cmt_type='', ed_=ed):
+
+    def _cmt_toggle_line(self, cmt_act, cmt_type=''):
         ''' Add/Remove full line comment
             Params
                 cmt_act     'del'   uncomment all lines
@@ -57,18 +57,18 @@ class Command:
                             'bod'   at first not blank
         '''
         self.do_load_ops()
-        lex         = ed_.get_prop(app.PROP_LEXER_CARET)
+        lex         = ed.get_prop(app.PROP_LEXER_CARET)
         cmt_sgn     = app.lexer_proc(app.LEXER_GET_COMMENT, lex)
         if not cmt_sgn:
             return app.msg_status('No line comment for lexer "%s"' % lex)
         # Analize
 
-        x0, y0 = ed_.get_caret_xy()
-        line1, line2 = ed_.get_sel_lines()
+        x0, y0 = ed.get_caret_xy()
+        line1, line2 = ed.get_sel_lines()
         rWrks = list(range(line1, line2+1))
-        bEmpSel = ed_.get_text_sel()==''
+        bEmpSel = ed.get_text_sel()==''
 
-        do_uncmt    = ed_.get_text_line(line1).lstrip().startswith(cmt_sgn) \
+        do_uncmt    = ed.get_text_line(line1).lstrip().startswith(cmt_sgn) \
                         if cmt_act=='bgn' else \
                       True \
                         if cmt_act=='del' else \
@@ -77,7 +77,7 @@ class Command:
         col_min_bd  = 1000 # infinity
         if op_equal_column:
             for rWrk in rWrks:
-                line        = ed_.get_text_line(rWrk)
+                line        = ed.get_text_line(rWrk)
                 pos_body    = line.index(line.lstrip())
                 pos_body    = len(line) if 0==len(line.lstrip()) else pos_body
                 col_min_bd  = min(pos_body, col_min_bd)
@@ -86,7 +86,7 @@ class Command:
         blnks4cmt   = ' '*len(cmt_sgn) # '\t'.expandtabs(len(cmt_sgn))
 
         for rWrk in rWrks:
-            line    = ed_.get_text_line(rWrk)
+            line    = ed.get_text_line(rWrk)
             pos_body= line.index(line.lstrip())
             pos_body= len(line) if 0==len(line.lstrip()) else pos_body
             if do_uncmt:
@@ -131,25 +131,47 @@ class Command:
                    #line = line[:pos_body]             +cmt_sgn+line[pos_body:]
 
             pass;              #LOG and log('new line={}', (line))
-            ed_.set_text_line(rWrk, line)
+            ed.set_text_line(rWrk, line)
             #for rWrk
         if bEmpSel and op_move_down:
-            ed_.set_caret_xy(x0, y0+1)
+            ed.set_caret_xy(x0, y0+1)
        #def _cmt_toggle_line
 
 
     def cmt_toggle_stream(self):
 
         if ed.get_sel_mode() != app.SEL_NORMAL:
-            return app.msg_status('Commenting requires normal selection')
+            return app.msg_status('Comment needs normal selection')
         lex = ed.get_prop(app.PROP_LEXER_CARET)
-        ((bgn_sgn, end_sgn), bOnlyLn) = self._get_cmt_pair(lex)
-        if not bgn_sgn:
-            return app.msg_status('No stream comment for lexer "%s"' % lex)
+        ((str1, str2), bFull) = self._get_cmt_pair(lex)
+        if not str1:
+            return app.msg_status('No range-comments for lexer: '+lex)
 
-        x0, y0 = ed.get_caret_xy()
-        bEmpSel = ed.get_text_sel()==''
-        print('todo')
+        text_sel = ed.get_text_sel()
+        if not text_sel:
+            return app.msg_status('Comment needs selection')
+        pos1, nlen = ed.get_sel()
+
+        if bFull:
+            text_sel = text_sel.strip('\n\r')
+
+        if text_sel.startswith(str1):
+            #uncomment
+            text_sel = text_sel[len(str1):-len(str2)]
+            if bFull:
+                text_sel = text_sel.strip('\n\r')
+        else:
+            #comment
+            if bFull:
+                eol = ed.get_prop(app.PROP_EOL)
+                text_sel = str1+eol+text_sel+eol+str2+eol
+            else:
+                text_sel = str1+text_sel+str2
+
+        ed.replace(pos1, nlen, text_sel)
+        ed.set_sel(pos1, len(text_sel))
+        app.msg_status('Toggled stream comment')
+       #def cmt_toggle_stream
 
     def _get_cmt_pair(self, lex):
         ''' Return ((begin_sign, end_sign), only_lines)
