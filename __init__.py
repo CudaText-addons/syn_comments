@@ -69,7 +69,7 @@ class Command:
         lex         = ed.get_prop(app.PROP_LEXER_CARET)
         cmt_sgn     = app.lexer_proc(app.LEXER_GET_COMMENT, lex)
         if not cmt_sgn:
-            return app.msg_status('No line comment for lexer "%s"' % lex)
+            return app.msg_status('No line comment for lexer: '+lex)
         # Analize
 
         x0, y0 = ed.get_caret_xy()

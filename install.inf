@@ -12,7 +12,7 @@ params=cmt_toggle_line_1st
 [ini12]
 section=Commands
 id=Comments\Toggle line comment, at non-space char
-params=cmt_toggle_line_body
+params=cmt_toggle_line_body;;Ctrl+/
 
 [ini21]
 section=Commands
@@ -37,7 +37,7 @@ params=_
 [ini31]
 section=Commands
 id=Comments\Toggle stream comment
-params=cmt_toggle_stream
+params=cmt_toggle_stream;;Alt+/
 
 [ini40]
 section=Commands
