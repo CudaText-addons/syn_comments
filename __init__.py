@@ -4,9 +4,10 @@ Authors:
     Alexey T. (SynWrite)
 '''
 
-import  os
-import  sw            as app
-from    sw        import ed
+import os
+import sw as app
+from sw import ed
+from .dlg import *
 
 fn_config = os.path.join(app.app_ini_dir(), 'syn_comments.ini')
 op_keep_column = False
@@ -17,23 +18,32 @@ op_move_down = False
 class Command:
     def __init__(self):
         self.pair4lex = {}
-
-    def do_save_ops(self):
-        app.ini_write(fn_config, 'op', 'keep_column', '1' if op_keep_column else '0')
-        app.ini_write(fn_config, 'op', 'equal_column', '1' if op_equal_column else '0')
-        app.ini_write(fn_config, 'op', 'full_line_if_no_sel', '1' if op_full_line_if_no_sel else '0')
-        app.ini_write(fn_config, 'op', 'move_down', '1' if op_move_down else '0')
+        self.do_load_ops()
 
     def do_load_ops(self):
+        global op_keep_column, op_equal_column, op_full_line_if_no_sel, op_move_down
+
         op_keep_column = app.ini_read(fn_config, 'op', 'keep_column', '0') == '1'
         op_equal_column = app.ini_read(fn_config, 'op', 'equal_column', '0') == '1'
         op_full_line_if_no_sel = app.ini_read(fn_config, 'op', 'full_line_if_no_sel', '0') == '1'
         op_move_down = app.ini_read(fn_config, 'op', 'move_down', '0') == '1'
 
-    def dlg_config(self):
-        self.do_save_ops()
-        app.file_open(fn_config)
+    def do_save_ops(self):
+        global op_keep_column, op_equal_column, op_full_line_if_no_sel, op_move_down
 
+        app.ini_write(fn_config, 'op', 'keep_column', '1' if op_keep_column else '0')
+        app.ini_write(fn_config, 'op', 'equal_column', '1' if op_equal_column else '0')
+        app.ini_write(fn_config, 'op', 'full_line_if_no_sel', '1' if op_full_line_if_no_sel else '0')
+        app.ini_write(fn_config, 'op', 'move_down', '1' if op_move_down else '0')
+
+    def dlg_config(self):
+        global op_keep_column, op_equal_column, op_full_line_if_no_sel, op_move_down
+
+        res = dialog_config(op_keep_column, op_equal_column, op_full_line_if_no_sel, op_move_down)
+        if res is None: return
+
+        op_keep_column, op_equal_column, op_full_line_if_no_sel, op_move_down = res
+        self.do_save_ops()
 
     def cmt_toggle_line_1st(self):
         return self._cmt_toggle_line('bgn', '1st')
@@ -56,7 +66,6 @@ class Command:
                 cmt_type    '1st'   at begin of line
                             'bod'   at first not blank
         '''
-        self.do_load_ops()
         lex         = ed.get_prop(app.PROP_LEXER_CARET)
         cmt_sgn     = app.lexer_proc(app.LEXER_GET_COMMENT, lex)
         if not cmt_sgn:
@@ -147,10 +156,19 @@ class Command:
         if not str1:
             return app.msg_status('No range-comments for lexer: '+lex)
 
-        text_sel = ed.get_text_sel()
-        if not text_sel:
-            return app.msg_status('Comment needs selection')
         pos1, nlen = ed.get_sel()
+        if not nlen:
+            if op_full_line_if_no_sel:
+                x0, y0 = ed.get_caret_xy()
+                nlen = len(ed.get_text_line(y0))
+                pos = ed.xy_pos(0, y0)
+                ed.set_caret_xy(0, y0)
+                ed.set_sel(pos, nlen)
+            else:
+                return app.msg_status('Comment needs selection')
+
+        pos1, nlen = ed.get_sel()
+        text_sel = ed.get_text_sel()
 
         if bFull:
             text_sel = text_sel.strip('\n\r')
