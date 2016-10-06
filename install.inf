@@ -39,7 +39,12 @@ section=Commands
 id=Comments\Toggle stream comment
 params=cmt_toggle_stream
 
-[ini100]
+[ini40]
 section=Commands
-id=Comments\Config
+id=Comments\--
+params=_
+
+[ini41]
+section=Commands
+id=Comments\Config...
 params=dlg_config
